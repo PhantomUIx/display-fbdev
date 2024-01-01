@@ -1,7 +1,11 @@
 const std = @import("std");
 const Phantom = @import("phantom");
 
-pub const phantomModule = Phantom.Sdk.PhantomModule{};
+pub const phantomModule = Phantom.Sdk.PhantomModule{
+    .provides = .{
+        .displays = &.{"fbdev"},
+    },
+};
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -10,6 +14,11 @@ pub fn build(b: *std.Build) void {
     const no_docs = b.option(bool, "no-docs", "skip installing documentation") orelse false;
     const no_tests = b.option(bool, "no-tests", "skip generating tests") orelse false;
     const scene_backend = b.option(Phantom.SceneBackendType, "scene-backend", "The scene backend to use for the example") orelse .headless;
+
+    const vizops = b.dependency("vizops", .{
+        .target = target,
+        .optimize = optimize,
+    });
 
     const phantom = b.dependency("phantom", .{
         .target = target,
@@ -23,6 +32,10 @@ pub fn build(b: *std.Build) void {
             .{
                 .name = "phantom",
                 .module = phantom.module("phantom"),
+            },
+            .{
+                .name = "vizops",
+                .module = vizops.module("vizops"),
             },
         },
     });
@@ -39,7 +52,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     exe_example.addModule("phantom", phantom.module("phantom"));
-    exe_example.addModule("phantom.template.module", module);
+    exe_example.addModule("phantom.display.fbdev", module);
     exe_example.addModule("options", exe_options.createModule());
     b.installArtifact(exe_example);
 
@@ -55,6 +68,7 @@ pub fn build(b: *std.Build) void {
         });
 
         unit_tests.addModule("phantom", phantom.module("phantom"));
+        unit_tests.addModule("vizops", vizops.module("vizops"));
 
         const run_unit_tests = b.addRunArtifact(unit_tests);
         step_test.dependOn(&run_unit_tests.step);

@@ -5,6 +5,11 @@
   .dependencies = .{
     .phantom = .{
       .url = "https://github.com/PhantomUIx/core/archive/a02e1953db8c22b16ff4f1ac5262439919a7653a.tar.gz",
+      .hash = "122012f38f2b9b725223989c5359639ccb41842a1ae5fb6e1f5955605f6809ab9306",
+    },
+    .vizops = .{
+      .url = "https://github.com/MidstallSoftware/vizops/archive/8b8499e195d8cf66e9b13ed1c80b24ee27420a29.tar.gz",
+      .hash = "1220f478cda5edf75a0b837e04c741631e4136e422b4257ccbd09d4cccaf736ac312",
     },
   },
 }
