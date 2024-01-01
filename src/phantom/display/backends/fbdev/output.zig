@@ -11,10 +11,14 @@ display: *Display,
 file: std.fs.File,
 surface: ?*Surface,
 scale: vizops.vector.Float32Vector2,
+name: []const u8,
 
 pub fn new(display: *Display, file: std.fs.File) !*Self {
     const self = try display.allocator.create(Self);
     errdefer display.allocator.destroy(self);
+
+    var fscreenInfo: types.FixScreenInfo = undefined;
+    try fscreenInfo.get(file.handle);
 
     self.* = .{
         .base = .{
@@ -33,13 +37,11 @@ pub fn new(display: *Display, file: std.fs.File) !*Self {
         .file = file,
         .surface = null,
         .scale = vizops.vector.Float32Vector2.init(1.0),
+        .name = try display.allocator.dupe(u8, &fscreenInfo.id),
     };
 
-    var fscreenInfo: types.FixScreenInfo = undefined;
-    try fscreenInfo.get(file.handle);
-
     var vscreenInfo: types.VarScreenInfo = undefined;
-    try vscreenInfo.get(file.handle);
+    try vscreenInfo.get(self.file.handle);
 
     std.debug.print("{}\n{}\n", .{ fscreenInfo, vscreenInfo });
     return self;
@@ -68,8 +70,28 @@ fn impl_create_surface(ctx: *anyopaque, kind: phantom.display.Surface.Kind, _: p
 
 fn impl_info(ctx: *anyopaque) anyerror!phantom.display.Output.Info {
     const self: *Self = @ptrCast(@alignCast(ctx));
-    _ = self;
-    return error.NotImplemented;
+
+    var fscreenInfo: types.FixScreenInfo = undefined;
+    try fscreenInfo.get(self.file.handle);
+
+    var vscreenInfo: types.VarScreenInfo = undefined;
+    try vscreenInfo.get(self.file.handle);
+
+    const res = vizops.vector.UsizeVector2.init([_]usize{
+        vscreenInfo.xres,
+        vscreenInfo.yres,
+    });
+    return .{
+        .enable = true,
+        .size = .{
+            .phys = .{ .value = res.cast(f32).value },
+            .res = .{ .value = res.value },
+        },
+        .scale = .{ .value = self.scale.value },
+        .name = self.name,
+        .manufacturer = self.name,
+        .colorFormat = .{ .rgb = @splat(@intCast(@divExact(vscreenInfo.bpp, 8))) },
+    };
 }
 
 fn impl_update_info(ctx: *anyopaque, info: phantom.display.Output.Info, fields: []std.meta.FieldEnum(phantom.display.Output.Info)) anyerror!void {
@@ -96,5 +118,6 @@ fn impl_deinit(ctx: *anyopaque) void {
     const self: *Self = @ptrCast(@alignCast(ctx));
     if (self.surface) |surface| surface.base.deinit();
     self.file.close();
+    self.display.allocator.free(self.name);
     self.display.allocator.destroy(self);
 }
