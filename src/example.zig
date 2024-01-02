@@ -263,6 +263,7 @@ pub fn main() !void {
 
     var display = phantom.display.Backend(.fbdev).Display.init(alloc, .compositor);
     defer display.deinit();
+    std.debug.print("{}\n", .{display});
 
     const outputs = try @constCast(&display.display()).outputs();
     defer outputs.deinit();
@@ -272,6 +273,8 @@ pub fn main() !void {
     }
 
     const output = outputs.items[0];
+    std.debug.print("{}\n", .{output});
+
     const surface = output.createSurface(.output, .{
         .size = (try output.info()).size.res,
     }) catch |e| @panic(@errorName(e));
@@ -281,6 +284,7 @@ pub fn main() !void {
     }
 
     const scene = try surface.createScene(@enumFromInt(@intFromEnum(sceneBackendType)));
+    std.debug.print("{}\n", .{scene});
 
     var children: [17]*phantom.scene.Node = undefined;
 
@@ -298,11 +302,13 @@ pub fn main() !void {
     defer flex.deinit();
 
     while (true) {
-        _ = scene.frame(flex) catch |e| @panic(@errorName(e));
+        const seq = scene.seq;
+        _ = try scene.frame(flex);
+        if (seq != scene.seq) std.debug.print("Frame #{}\n", .{scene.seq});
 
         const currPalette = scene.seq % colors.len;
         for (children, colors[currPalette]) |child, color| {
-            child.setProperties(.{ .color = color }) catch |e| @panic(@errorName(e));
+            try child.setProperties(.{ .color = color });
         }
     }
 }
