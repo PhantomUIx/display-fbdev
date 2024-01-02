@@ -310,5 +310,7 @@ pub fn main() !void {
         for (children, colors[currPalette]) |child, color| {
             try child.setProperties(.{ .color = color });
         }
+
+        std.time.sleep(std.time.ns_per_s);
     }
 }
