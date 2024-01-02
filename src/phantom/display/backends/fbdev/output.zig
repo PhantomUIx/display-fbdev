@@ -81,6 +81,7 @@ fn impl_info(ctx: *anyopaque) anyerror!phantom.display.Output.Info {
         vscreenInfo.xres,
         vscreenInfo.yres,
     });
+
     return .{
         .enable = true,
         .size = .{
@@ -90,7 +91,72 @@ fn impl_info(ctx: *anyopaque) anyerror!phantom.display.Output.Info {
         .scale = .{ .value = self.scale.value },
         .name = self.name,
         .manufacturer = self.name,
-        .colorFormat = .{ .rgb = @splat(@intCast(@divExact(vscreenInfo.bpp, 8))) },
+        .colorFormat = blk: {
+            const hasAlpha = vscreenInfo.transp.len > 0;
+            const isBgr = vscreenInfo.blue.offset < vscreenInfo.red.offset;
+            const isAlphaFirst = vscreenInfo.transp.offset == 0;
+
+            if (isBgr) {
+                if (hasAlpha) {
+                    if (isAlphaFirst) {
+                        break :blk .{
+                            .abgr = .{
+                                @intCast(vscreenInfo.transp.len),
+                                @intCast(vscreenInfo.blue.len),
+                                @intCast(vscreenInfo.green.len),
+                                @intCast(vscreenInfo.red.len),
+                            },
+                        };
+                    }
+                    break :blk .{
+                        .bgra = .{
+                            @intCast(vscreenInfo.blue.len),
+                            @intCast(vscreenInfo.green.len),
+                            @intCast(vscreenInfo.red.len),
+                            @intCast(vscreenInfo.transp.len),
+                        },
+                    };
+                }
+
+                break :blk .{
+                    .bgr = .{
+                        @intCast(vscreenInfo.blue.len),
+                        @intCast(vscreenInfo.green.len),
+                        @intCast(vscreenInfo.red.len),
+                    },
+                };
+            }
+
+            if (hasAlpha) {
+                if (isAlphaFirst) {
+                    break :blk .{
+                        .argb = .{
+                            @intCast(vscreenInfo.transp.len),
+                            @intCast(vscreenInfo.red.len),
+                            @intCast(vscreenInfo.green.len),
+                            @intCast(vscreenInfo.blue.len),
+                        },
+                    };
+                }
+
+                break :blk .{
+                    .rgba = .{
+                        @intCast(vscreenInfo.red.len),
+                        @intCast(vscreenInfo.green.len),
+                        @intCast(vscreenInfo.blue.len),
+                        @intCast(vscreenInfo.transp.len),
+                    },
+                };
+            }
+
+            break :blk .{
+                .rgb = .{
+                    @intCast(vscreenInfo.red.len),
+                    @intCast(vscreenInfo.green.len),
+                    @intCast(vscreenInfo.blue.len),
+                },
+            };
+        },
     };
 }
 
