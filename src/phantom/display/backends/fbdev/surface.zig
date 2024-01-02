@@ -5,6 +5,7 @@ const Self = @This();
 
 base: phantom.display.Surface,
 output: *Output,
+fb: ?*phantom.painting.fb.Base,
 scene: ?*phantom.scene.Base,
 
 pub fn new(output: *Output) !*Self {
@@ -26,6 +27,7 @@ pub fn new(output: *Output) !*Self {
             .type = @typeName(Self),
         },
         .output = output,
+        .fb = null,
         .scene = null,
     };
     return self;
@@ -82,6 +84,26 @@ fn impl_create_scene(ctx: *anyopaque, backendType: phantom.scene.BackendType) an
     const self: *Self = @ptrCast(@alignCast(ctx));
 
     if (self.scene) |scene| return scene;
-    _ = backendType;
-    return error.NotImplemented;
+
+    const outputInfo = try self.output.base.info();
+
+    if (self.fb == null) {
+        self.fb = try phantom.painting.fb.FileDescriptorFrameBuffer.create(self.output.display.allocator, .{
+            .res = outputInfo.size.res,
+            .colorspace = .sRGB,
+            .colorFormat = outputInfo.colorFormat,
+        }, self.output.file.handle);
+    }
+
+    self.scene = try phantom.scene.createBackend(backendType, .{
+        .allocator = self.output.display.allocator,
+        .frame_info = phantom.scene.Node.FrameInfo.init(.{
+            .res = outputInfo.size.res,
+            .scale = outputInfo.scale,
+            .physicalSize = outputInfo.size.phys,
+            .colorFormat = outputInfo.colorFormat,
+        }),
+        .target = .{ .fb = self.fb.? },
+    });
+    return self.scene.?;
 }

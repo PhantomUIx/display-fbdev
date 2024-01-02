@@ -54,6 +54,7 @@ pub fn build(b: *std.Build) void {
     exe_example.addModule("phantom", phantom.module("phantom"));
     exe_example.addModule("phantom.display.fbdev", module);
     exe_example.addModule("options", exe_options.createModule());
+    exe_example.addModule("vizops", vizops.module("vizops"));
     b.installArtifact(exe_example);
 
     if (!no_tests) {
