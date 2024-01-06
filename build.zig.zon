@@ -4,12 +4,12 @@
   .paths = .{"."},
   .dependencies = .{
     .phantom = .{
-      .url = "https://github.com/PhantomUIx/core/archive/c1fa830321b81530007511dc601b12004c7c9a33.tar.gz",
-      .hash = "122053a3b8a5f8130f40aa2b656f41e90348a876f839baddc8f9570844e0c74dc870",
+      .url = "https://github.com/PhantomUIx/core/archive/63912d18801ae6190ab4ce15d2fd8303b797d649.tar.gz",
+      .hash = "1220fcd5a5f024f9d9d40dd68c09f3a678fe73a40120d27b415156b81690cf5d91f4",
     },
     .vizops = .{
-      .url = "https://github.com/MidstallSoftware/vizops/archive/8b8499e195d8cf66e9b13ed1c80b24ee27420a29.tar.gz",
-      .hash = "1220f478cda5edf75a0b837e04c741631e4136e422b4257ccbd09d4cccaf736ac312",
+      .url = "https://github.com/MidstallSoftware/vizops/archive/75ed00f8eb217d774878fc0416d882b5ebce2b07.tar.gz",
+      .hash = "1220f72b311022cffc91f2b08f1e958bf60e1ae0c4f84b7116b1de17ddfbad9b71e3",
     },
   },
 }
