@@ -39,6 +39,11 @@ pub fn new(display: *Display, file: std.fs.File) !*Self {
         .scale = vizops.vector.Float32Vector2.init(1.0),
         .name = try display.allocator.dupe(u8, &fscreenInfo.id),
     };
+
+    var vscreenInfo: types.VarScreenInfo = undefined;
+    try vscreenInfo.get(self.file.handle);
+
+    std.debug.print("{}\n", .{vscreenInfo});
     return self;
 }
 
@@ -90,6 +95,7 @@ fn impl_info(ctx: *anyopaque) anyerror!phantom.display.Output.Info {
             const hasAlpha = vscreenInfo.transp.len > 0;
             const isBgr = vscreenInfo.blue.offset < vscreenInfo.red.offset;
             const isAlphaFirst = vscreenInfo.transp.offset == 0;
+            const sumNoAlpha = vscreenInfo.red.len + vscreenInfo.green.len + vscreenInfo.blue.len;
 
             if (isBgr) {
                 if (hasAlpha) {
@@ -109,6 +115,17 @@ fn impl_info(ctx: *anyopaque) anyerror!phantom.display.Output.Info {
                             @intCast(vscreenInfo.green.len),
                             @intCast(vscreenInfo.red.len),
                             @intCast(vscreenInfo.transp.len),
+                        },
+                    };
+                }
+
+                if (sumNoAlpha < vscreenInfo.bpp) {
+                    break :blk .{
+                        .bgrx = .{
+                            @intCast(vscreenInfo.blue.len),
+                            @intCast(vscreenInfo.green.len),
+                            @intCast(vscreenInfo.red.len),
+                            @intCast(vscreenInfo.bpp - sumNoAlpha),
                         },
                     };
                 }
@@ -140,6 +157,17 @@ fn impl_info(ctx: *anyopaque) anyerror!phantom.display.Output.Info {
                         @intCast(vscreenInfo.green.len),
                         @intCast(vscreenInfo.blue.len),
                         @intCast(vscreenInfo.transp.len),
+                    },
+                };
+            }
+
+            if (sumNoAlpha < vscreenInfo.bpp) {
+                break :blk .{
+                    .rgbx = .{
+                        @intCast(vscreenInfo.red.len),
+                        @intCast(vscreenInfo.green.len),
+                        @intCast(vscreenInfo.blue.len),
+                        @intCast(vscreenInfo.bpp - sumNoAlpha),
                     },
                 };
             }
