@@ -39,11 +39,6 @@ pub fn new(display: *Display, file: std.fs.File) !*Self {
         .scale = vizops.vector.Float32Vector2.init(1.0),
         .name = try display.allocator.dupe(u8, &fscreenInfo.id),
     };
-
-    var vscreenInfo: types.VarScreenInfo = undefined;
-    try vscreenInfo.get(self.file.handle);
-
-    std.debug.print("{}\n", .{vscreenInfo});
     return self;
 }
 
